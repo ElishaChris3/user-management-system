@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Role, User } from "@/types/user";
+import { toast } from "react-toastify";
 
 interface Props {
   initial?: Partial<User>;
@@ -24,27 +25,42 @@ export default function UserForm({ initial, mode, userId }: Props) {
     e.preventDefault();
     setSaving(true);
     setError(null);
-    try {
-      const payload = { name, email, role };
-      const res = await fetch(
-        mode === "create" ? "/api/users" : `/api/users/${userId}`,
-        {
-          method: mode === "create" ? "POST" : "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || "Failed to save");
-      }
-      router.push("/users");
-      router.refresh();
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
-    } finally {
-      setSaving(false);
+   try {
+  const payload = { name, email, role };
+  const res = await fetch(
+    mode === "create" ? "/api/users" : `/api/users/${userId}`,
+    {
+      method: mode === "create" ? "POST" : "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     }
+  );
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data?.error || "Failed to save");
+  }
+
+  // ✅ Success toast
+  toast.success(
+    mode === "create"
+      ? "✅ User created successfully!"
+      : "✏️ User updated successfully!"
+  );
+
+  // redirect and refresh after short delay so toast is visible
+  setTimeout(() => {
+    router.push("/users");
+    router.refresh();
+  }, 600);
+} catch (err: any) {
+  // ❌ Error toast
+  toast.error(err.message || "Something went wrong");
+  setError(err.message || "Something went wrong");
+} finally {
+  setSaving(false);
+}
+
   }
 
   return (

@@ -7,26 +7,25 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const q = (searchParams.get("q") || "").trim();
     const roleParam = (searchParams.get("role") || "").trim().toUpperCase();
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
 
     const AND: any[] = [];
-
-    if (q) {
-      // Case-insensitive name search
-      AND.push({ name: { contains: q, mode: "insensitive" as any } });
-    }
-
-    if (roleParam && ["ADMIN", "EDITOR", "VIEWER"].includes(roleParam)) {
+    if (q) AND.push({ name: { contains: q, mode: "insensitive" as any } });
+    if (roleParam && ["ADMIN", "EDITOR", "VIEWER"].includes(roleParam))
       AND.push({ role: roleParam });
-    }
 
     const where = AND.length ? { AND } : {};
 
+    const total = await prisma.user.count({ where });
     const users = await prisma.user.findMany({
       where,
       orderBy: { createdAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    return NextResponse.json({ data: users }, { status: 200 });
+    return NextResponse.json({ data: users, total, page, limit }, { status: 200 });
   } catch (e: any) {
     console.error(e);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

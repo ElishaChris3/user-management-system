@@ -43,16 +43,29 @@ export async function PUT(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-
-export async function DELETE(_req: NextRequest, { params }: Params) {
+export async function DELETE(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    await prisma.user.delete({ where: { id: params.id } });
-    return NextResponse.json({ ok: true }, { status: 204 });
-  } catch (e: any) {
-    if (e?.code === "P2025") {
+    const user = await prisma.user.delete({
+      where: { id: params.id },
+    });
+
+    if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    console.error(e);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+
+ 
+    return NextResponse.json(
+      { message: "User deleted successfully" },
+      { status: 200 }
+    );
+  } catch (err: any) {
+    console.error("DELETE error:", err);
+    return NextResponse.json(
+      { error: err.message || "Failed to delete user" },
+      { status: 500 }
+    );
   }
 }

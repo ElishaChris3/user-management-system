@@ -5,32 +5,46 @@ import { useEffect, useState } from "react";
 
 const ROLES = ["ADMIN", "EDITOR", "VIEWER"] as const;
 
+function useDebounce<T>(value: T, delay = 400): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debounced;
+}
+
 export default function SearchBar() {
   const router = useRouter();
   const sp = useSearchParams();
+
   const [q, setQ] = useState(sp.get("q") ?? "");
   const [role, setRole] = useState(sp.get("role") ?? "");
 
-  useEffect(() => {
-    setQ(sp.get("q") ?? "");
-    setRole(sp.get("role") ?? "");
-  }, [sp]);
+  
+  const debouncedQ = useDebounce(q, 400);
+  const debouncedRole = useDebounce(role, 200);
 
-  function updateQuery(next: { q?: string; role?: string }) {
+  
+  useEffect(() => {
     const params = new URLSearchParams(sp.toString());
-    if (next.q !== undefined) next.q ? params.set("q", next.q) : params.delete("q");
-    if (next.role !== undefined)
-      next.role ? params.set("role", next.role) : params.delete("role");
+    if (debouncedQ) params.set("q", debouncedQ);
+    else params.delete("q");
+
+    if (debouncedRole) params.set("role", debouncedRole);
+    else params.delete("role");
+
+    
+    params.delete("page");
+
     router.push(`/users?${params.toString()}`);
-  }
+    
+  }, [debouncedQ, debouncedRole]);
 
   return (
     <div className="card mb-5 border border-gray-200 bg-white p-5 shadow-sm">
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          updateQuery({ q, role });
-        }}
+        onSubmit={(e) => e.preventDefault()}
         className="flex flex-col gap-4 md:flex-row md:items-end"
       >
         <div className="flex-1">
@@ -63,15 +77,12 @@ export default function SearchBar() {
           <button
             type="button"
             className="btn btn-secondary hover:border-indigo-500 hover:text-indigo-600"
-            onClick={() => updateQuery({ q: "", role: "" })}
+            onClick={() => {
+              setQ("");
+              setRole("");
+            }}
           >
             Reset
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary bg-indigo-600 hover:bg-indigo-700 border-indigo-700"
-          >
-            Search
           </button>
         </div>
       </form>
