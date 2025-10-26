@@ -7,6 +7,7 @@ import UserTable from "@/components/UserTable";
 import SearchBar from "@/components/SearchBar";
 import type { User } from "@/types/user";
 import { useSearchParams } from "next/navigation";
+import Loader from "@/components/Loader";
 
 export default function UsersPageClient() {
   const sp = useSearchParams();
@@ -50,7 +51,7 @@ export default function UsersPageClient() {
 
       <SearchBar />
 
-      {loading && <p className="text-sm text-gray-500">Loading users…</p>}
+      {loading && <Loader />}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && <UserTable users={users} onDelete={async (id: string) => {

@@ -26,14 +26,6 @@ export default function Navbar() {
           <Link href="/users/new" className="hover:text-indigo-600 transition-colors">
             Add User
           </Link>
-          <a
-            href="https://www.prisma.io/docs/orm/overview/databases/mongodb"
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-indigo-600 transition-colors"
-          >
-            Prisma + MongoDB
-          </a>
         </nav>
 
         {/* Mobile Menu Toggle */}

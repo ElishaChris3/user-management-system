@@ -25,22 +25,15 @@ export default function UserForm({ initial, mode, userId }: Props) {
     setSaving(true);
     setError(null);
     try {
-      const payload: any = { name, email, role };
-      let res: Response;
-      if (mode === "create") {
-        res = await fetch("/api/users", {
-          method: "POST",
+      const payload = { name, email, role };
+      const res = await fetch(
+        mode === "create" ? "/api/users" : `/api/users/${userId}`,
+        {
+          method: mode === "create" ? "POST" : "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        });
-      } else {
-        // For edit, email might be disabled to edit; still send if present
-        res = await fetch(`/api/users/${userId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
+        }
+      );
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data?.error || "Failed to save");
@@ -55,12 +48,15 @@ export default function UserForm({ initial, mode, userId }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="col-span-1">
-          <label className="label">Name</label>
+    <form
+      onSubmit={handleSubmit}
+      className="card border border-gray-200 shadow-sm bg-white p-6 space-y-5"
+    >
+      <div className="grid gap-5 md:grid-cols-2">
+        <div>
+          <label className="label mb-1">Name</label>
           <input
-            className="input"
+            className="input focus:ring-2 focus:ring-indigo-500"
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -68,10 +64,10 @@ export default function UserForm({ initial, mode, userId }: Props) {
           />
         </div>
 
-        <div className="col-span-1">
-          <label className="label">Email</label>
+        <div>
+          <label className="label mb-1">Email</label>
           <input
-            className="input"
+            className="input focus:ring-2 focus:ring-indigo-500"
             required
             type="email"
             value={email}
@@ -80,10 +76,10 @@ export default function UserForm({ initial, mode, userId }: Props) {
           />
         </div>
 
-        <div className="col-span-1">
-          <label className="label">Role</label>
+        <div>
+          <label className="label mb-1">Role</label>
           <select
-            className="input"
+            className="input focus:ring-2 focus:ring-indigo-500"
             value={role}
             onChange={(e) => setRole(e.target.value as Role)}
           >
@@ -98,12 +94,20 @@ export default function UserForm({ initial, mode, userId }: Props) {
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <div className="flex gap-2">
-        <button className="btn btn-primary" type="submit" disabled={saving}>
-          {saving ? "Saving..." : mode === "create" ? "Create user" : "Save changes"}
+      <div className="flex gap-3">
+        <button
+          className="btn btn-primary bg-indigo-600 hover:bg-indigo-700 border-indigo-700"
+          type="submit"
+          disabled={saving}
+        >
+          {saving
+            ? "Saving..."
+            : mode === "create"
+            ? "Create user"
+            : "Save changes"}
         </button>
         <button
-          className="btn btn-secondary"
+          className="btn btn-secondary hover:border-indigo-500 hover:text-indigo-600"
           type="button"
           onClick={() => router.push("/users")}
         >
